@@ -7,6 +7,7 @@
 **Basic Menu Layout & Explained**
 ## Build Prerequisites
 + Installed Microsoft Visual Studio 2019+ 
++ Installed DirectX Software Development Kit, get it from https://www.microsoft.com/en-us/download/details.aspx?id=6812
 + [BlackBone Static Library](https://github.com/DarthTon/Blackbone), build the project into `BlackBone.lib`(Release build) and `BlackBone-d.lib`(Debug build)
 + Put both .lib files under `$(ProjectDir)\dependency\blackbone\Lib`
 ## How to use?
