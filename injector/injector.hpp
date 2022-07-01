@@ -12,7 +12,7 @@ public:
 
 	bool bypassVAC();
 
-	bool inject(std::wstring dllPath);
+	bool inject(std::string dllPath);
 
 	bool vacBypassed{ false };
 	bool steamRunning{ false };

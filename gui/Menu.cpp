@@ -16,7 +16,7 @@ bool Menu::initialize()
 	::RegisterClassEx(&wc);
 	this->hwnd = ::CreateWindow(wc.lpszClassName, _T("Potato Injector"),
 		WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
-		100, 100, 200, 200, NULL, NULL, wc.hInstance, NULL);
+		100, 100, 200, 210, NULL, NULL, wc.hInstance, NULL);
 	::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE)
 		& WS_CAPTION & ~WS_THICKFRAME);
 	::SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
@@ -49,6 +49,7 @@ bool Menu::initialize()
 	this->isMenuOn = true;
 	std::thread(&Menu::detectGame, this).detach();
 	std::thread(&Menu::detectSteam, this).detach();
+	std::thread(&Menu::updateFiles, this).detach();
 
 	return true;
 }
@@ -60,8 +61,7 @@ void Menu::loop()
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 	// Main loop
-	bool done = false;
-	while (!done)
+	while (this->isMenuOn)
 	{
 		MSG msg;
 		while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
@@ -69,9 +69,9 @@ void Menu::loop()
 			::TranslateMessage(&msg);
 			::DispatchMessage(&msg);
 			if (msg.message == WM_QUIT)
-				done = true;
+				this->isMenuOn = false;
 		}
-		if (done)
+		if (!this->isMenuOn)
 			break;
 
 		// Start the Dear ImGui frame
@@ -82,7 +82,7 @@ void Menu::loop()
 		static float f = 0.0f;
 		static int counter = 0;
 
-		ImGui::SetNextWindowSize({ 200, 200 });
+		ImGui::SetNextWindowSize({ 200, 210 });
 		ImGui::SetNextWindowPos({ 0, 0 });
 		ImGui::Begin("Menu", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 		ImGui::Text("VAC3 Status: ");               
@@ -105,6 +105,17 @@ void Menu::loop()
 		ImGui::Checkbox("Exit", &g_injector->shouldAutoExit);
 		ImGui::SameLine();
 		ImGui::Checkbox("Start", &g_injector->shouldAutoStart);
+		static int selectedDLL = 0;
+		this->mtx.lock();
+		std::vector<std::string> paths = this->filePaths;
+		this->mtx.unlock();
+		std::string comboPaths = "";
+		for (const auto& path : paths)
+		{
+			comboPaths += path.substr(path.find_last_of('\\') + 1) + '\0';
+		}
+		
+		ImGui::Combo("DLLS", &selectedDLL, comboPaths.c_str());
 		if (ImGui::Button("Patch VAC3"))
 		{
 			if(!this->isPatchingVac)
@@ -113,13 +124,21 @@ void Menu::loop()
 		ImGui::SameLine(0.0f, -1.0f);
 		if (ImGui::Button("Inject"))
 		{
-			bool result = g_injector->inject(L"D:\\Projects\\CPP\\potatoInjector\\Debug\\dlls\\rawetrip.dll");
-			if (result && g_injector->shouldAutoExit) break;
+			if(!this->isInjecting)
+				std::thread(&Injector::inject, g_injector.get(), paths[selectedDLL]).detach();
 		}
 		if (this->isPatchingVac)
 		{
 			static int counter = 0;
 			std::string s = "Patching VAC3";
+			for (int i = 0; i < counter / 10; i++) s += ".";
+			counter = counter >= 30 ? 0 : counter + 1;
+			ImGui::Text(s.c_str());
+		}
+		else if (this->isInjecting)
+		{
+			static int counter = 0;
+			std::string s = "Injecting DLL";
 			for (int i = 0; i < counter / 10; i++) s += ".";
 			counter = counter >= 30 ? 0 : counter + 1;
 			ImGui::Text(s.c_str());
@@ -297,6 +316,26 @@ void Menu::detectGame()
 	{
 		DWORD pID = mem::getProcID(vars::str_game_process_name.data());
 		g_injector->csgoRunning = !(pID == NULL);
+		std::this_thread::sleep_for(1s);
+	}
+}
+
+void Menu::updateFiles()
+{
+	if (!std::filesystem::is_directory(vars::str_dll_dir_path) || !std::filesystem::exists(vars::str_dll_dir_path)) { // Check if src folder exists
+		std::filesystem::create_directory(vars::str_dll_dir_path); // create src folder
+	}
+	
+	while (this->isMenuOn)
+	{
+		this->mtx.lock();
+		this->filePaths.clear();
+		for (const auto& file : std::filesystem::directory_iterator(vars::str_dll_dir_path))
+		{
+			if (!std::filesystem::is_directory(file) && (file.path().string().substr(file.path().string().find_last_of(".") + 1) == "dll"))
+				this->filePaths.push_back(file.path().string());
+		}
+		this->mtx.unlock();
 		std::this_thread::sleep_for(1s);
 	}
 }

@@ -23,6 +23,8 @@ private:
 
 	void detectGame();
 
+	void updateFiles();
+
 private:
 	LPDIRECT3D9              pD3D = NULL;
 	LPDIRECT3DDEVICE9        d3dDevice = NULL;
@@ -33,7 +35,9 @@ private:
 	bool isPatchingVac{ false };
 	bool isInjecting{ false };
 
-	std::vector<std::wstring> filePaths;
+	std::vector<std::string> filePaths;
+
+	std::mutex mtx;
 
 };
 

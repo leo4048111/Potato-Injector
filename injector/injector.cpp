@@ -23,9 +23,17 @@ bool Injector::bypassVAC()
 	std::wstring launchGame = string::format(L"-applaunch %d", vars::game_appid);
 	PROCESS_INFORMATION pi = {};
 #ifdef _DEBUG
-	bool result = mem::openProcess(steamPath, { launchGame, L" -windowed -w 1280 -h 720" ,vars::str_game_launch_opts.data() }, pi);
+	bool result = false;
+	if(this->shouldAutoStart)
+		result = mem::openProcess(steamPath, { launchGame, L" -windowed -w 1280 -h 720" ,vars::str_game_launch_opts.data() }, pi);
+	else
+		result = mem::openProcess(steamPath, { }, pi);
 #else
-	bool result = mem::openProcess(steamPath, { launchGame, vars::str_game_launch_opts.data() }, pi);
+	bool result = false;
+	if (this->shouldAutoStart)
+		result = mem::openProcess(steamPath, { launchGame, vars::str_game_launch_opts.data() }, pi);
+	else
+		result = mem::openProcess(steamPath, { }, pi);
 #endif
 	if (!result)
 	{
@@ -50,15 +58,24 @@ bool Injector::bypassVAC()
 
 }
 
-bool Injector::inject(std::wstring dllPath)
+bool Injector::inject(std::string dllPath)
 {
+	g_menu->isInjecting = true;
 	std::vector<BYTE> buffer;
-	if(!utils::readFileToMem(std::filesystem::absolute(dllPath), buffer))
+	if (!utils::readFileToMem(std::filesystem::absolute(dllPath), buffer))
+	{
+		g_menu->isInjecting = false;
 		return false;
+	}
 
 	if (!this->map(vars::str_game_process_name.data(), vars::str_game_mod_name.data(), buffer))
+	{
+		g_menu->isInjecting = false;
 		return false;
+	}
 
+	g_menu->isInjecting = false;
+	if (this->shouldAutoExit) g_menu->isMenuOn = false;
 	return true;
 }
 
