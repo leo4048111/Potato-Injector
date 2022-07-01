@@ -11,9 +11,9 @@
 + [BlackBone Static Library](https://github.com/DarthTon/Blackbone), build the project into `BlackBone.lib`(Release build) and `BlackBone-d.lib`(Debug build)
 + Put both .lib files under `$(ProjectDir)\dependency\blackbone\Lib`
 ## How to use?
-+ Click `Patch VAC3`, then steam and csgo will close then automatically open.
-+ Put dlls in .dll folder
-+ Select the dll to inject, then click `inject` to start injection
++ Click `Patch VAC3`, then steam will close then automatically open.
++ Put dlls in .dll folder.
++ Select the dll to inject, make sure CSGO game is up and running, then click `inject` to start injection.
 + Other labels and controls should be straightforward enough to comprehend.
 ## Credits
 + https://github.com/b1scoito/cozinha_loader From which I stole some readily available mapping and patching functions.
