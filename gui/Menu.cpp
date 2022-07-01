@@ -102,9 +102,9 @@ void Menu::loop()
 		ImGui::PopStyleColor();
 		ImGui::Text("Auto: ");
 		ImGui::SameLine();
-		ImGui::Checkbox("Exit", &g_injector->shouldAutoExit);
+		ImGui::Checkbox("Exit", &g_injector->shouldAutoExit);    //Whether to auto exit after injection
 		ImGui::SameLine();
-		ImGui::Checkbox("Start", &g_injector->shouldAutoStart);
+		ImGui::Checkbox("Start", &g_injector->shouldAutoStart);  //Whether to auto start game after patching VAC
 		static int selectedDLL = 0;
 		this->mtx.lock();
 		std::vector<std::string> paths = this->filePaths;
