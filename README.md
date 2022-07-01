@@ -16,7 +16,7 @@
 + Other labels and controls should be straightforward enough to comprehend.
 ## Credits
 + https://github.com/b1scoito/cozinha_loader From which I stole some readily available mapping and patching functions.
-+ https://github.com/ocornut/imgui]
++ https://github.com/ocornut/imgui
 + https://github.com/DarthTon/Blackbone
 ## Notice
 ***Use this injector at your own risk.***
