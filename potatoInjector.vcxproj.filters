@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="pch">
+      <UniqueIdentifier>{ba423bbd-c231-4f54-9ef1-3b7dc6b8b7e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="injector">
+      <UniqueIdentifier>{9e94fce9-fc66-449a-8b65-65c41f78bdc4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="memory">
+      <UniqueIdentifier>{ec606770-a04c-4a2c-8f5a-ca2d1828098f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="utils">
+      <UniqueIdentifier>{b7253503-e5ce-4331-9b87-2449bbc230c6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vars">
+      <UniqueIdentifier>{5959cf65-0814-4bc8-aa72-7a3298280083}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="winreg">
+      <UniqueIdentifier>{84352510-60ad-43b2-b436-f29f1c69fda5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vac3_bypass">
+      <UniqueIdentifier>{9670912b-bc2b-4a37-9227-2831c1590b6e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui">
+      <UniqueIdentifier>{89fb56d2-27aa-4c1e-b58a-449742ac2ff3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="imgui\backend">
+      <UniqueIdentifier>{0c2bc052-612f-4c31-b428-3ab201dd68bf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gui">
+      <UniqueIdentifier>{ad2e39f3-5503-49a9-9b16-7f8d63a01fbb}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pch.cpp">
+      <Filter>pch</Filter>
+    </ClCompile>
+    <ClCompile Include="injector\injector.cpp">
+      <Filter>injector</Filter>
+    </ClCompile>
+    <ClCompile Include="dependency\imgui\imgui.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="dependency\imgui\backend\imgui_impl_dx9.cpp">
+      <Filter>imgui\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="dependency\imgui\backend\imgui_impl_win32.cpp">
+      <Filter>imgui\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="dependency\imgui\imgui_draw.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="dependency\imgui\imgui_tables.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="dependency\imgui\imgui_widgets.cpp">
+      <Filter>imgui</Filter>
+    </ClCompile>
+    <ClCompile Include="gui\Menu.cpp">
+      <Filter>gui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h">
+      <Filter>pch</Filter>
+    </ClInclude>
+    <ClInclude Include="injector\injector.hpp">
+      <Filter>injector</Filter>
+    </ClInclude>
+    <ClInclude Include="memory\memory.hpp">
+      <Filter>memory</Filter>
+    </ClInclude>
+    <ClInclude Include="utils\utils.hpp">
+      <Filter>utils</Filter>
+    </ClInclude>
+    <ClInclude Include="vars\vars.hpp">
+      <Filter>vars</Filter>
+    </ClInclude>
+    <ClInclude Include="winreg\winreg.hpp">
+      <Filter>winreg</Filter>
+    </ClInclude>
+    <ClInclude Include="vac3_bypass\vac3_bypass.hpp">
+      <Filter>vac3_bypass</Filter>
+    </ClInclude>
+    <ClInclude Include="dependency\imgui\imconfig.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="dependency\imgui\imgui.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="dependency\imgui\backend\imgui_impl_dx9.h">
+      <Filter>imgui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="dependency\imgui\backend\imgui_impl_win32.h">
+      <Filter>imgui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="dependency\imgui\imgui_internal.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="dependency\imgui\imstb_rectpack.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="dependency\imgui\imstb_textedit.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="dependency\imgui\imstb_truetype.h">
+      <Filter>imgui</Filter>
+    </ClInclude>
+    <ClInclude Include="gui\Menu.hpp">
+      <Filter>gui</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
