@@ -2,7 +2,10 @@
 ## Info
  A simple GUI CSGO injector with VAC bypass, inject a selected dll to CSGO game process.
 ## Screenshot
-**To be uploaded...**
+![Screenshot1](https://github.com/leo4048111/Potato-Injector/tree/main/screenshots/screenshot1.png)
+**Basic Menu Style**
+![Screenshot2](https://github.com/leo4048111/Potato-Injector/tree/main/screenshots/screenshot2.png)
+**Control Explained**
 ## Build Prerequisites
 + Installed Microsoft Visual Studio 2019+ 
 + [BlackBone Static Library](https://github.com/DarthTon/Blackbone), build the project into `BlackBone.lib`(Release build) and `BlackBone-d.lib`(Debug build)
