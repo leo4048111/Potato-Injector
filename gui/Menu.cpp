@@ -81,30 +81,56 @@ void Menu::loop()
 
 		static float f = 0.0f;
 		static int counter = 0;
-
-		ImGui::SetNextWindowSize({ 200, 210 });
+		if (!g_injector->shouldAutoStart)
+		{
+			ImGui::SetNextWindowSize({ 200, 210 });
+		}
+		else
+		{
+			ImGui::SetNextWindowSize({ 200, 235 });
+		}
 		ImGui::SetNextWindowPos({ 0, 0 });
 		ImGui::Begin("Menu", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
 		ImGui::Text("VAC3 Status: ");               
 		ImGui::SameLine();
-		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->vacBypassed ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 0, 0, 255));
-		g_injector->vacBypassed ? ImGui::Text("[BYPASSED]") : ImGui::Text("[INSECURE]");
+		static int cnt = 0;
+		cnt = cnt + 13 >= 2 * 255 ? 0 : cnt + 13;
+		int alpha = cnt >= 255 ? cnt : 2 * 255 - cnt;
+		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->vacBypassed ? IM_COL32(0, 255, 0, 255) : (this->isPatchingVac ? IM_COL32(255, 255, 0, alpha) : IM_COL32(255, 0, 0, 255)));
+		g_injector->vacBypassed ? ImGui::Text("[BYPASSED]") : (this->isPatchingVac ? ImGui::Text("[PATCHING]") : ImGui::Text("[INSECURE]"));
 		ImGui::PopStyleColor();
 		ImGui::Text("Steam Status: ");
 		ImGui::SameLine(0.0f, 1.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->steamRunning ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 255, 0, 255));
+		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->steamRunning ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 0, 0, 255));
 		g_injector->steamRunning ? ImGui::Text("[RUNNING]") : ImGui::Text("[OFFLINE]");
 		ImGui::PopStyleColor();
 		ImGui::Text("CSGO Status: ");
 		ImGui::SameLine();
-		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->csgoRunning ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 255, 0, 255));
-		g_injector->csgoRunning ? ImGui::Text("[RUNNING]") : ImGui::Text("[OFFLINE]");
+		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->csgoRunning ? (this->isInjecting ? IM_COL32(255, 255, 0, alpha) : IM_COL32(0, 255, 0, 255)) : IM_COL32(255, 0, 0, 255));
+		g_injector->csgoRunning ? (this->isInjecting ? ImGui::Text("[INJECTING]") : ImGui::Text("[RUNNING]")) : ImGui::Text("[OFFLINE]");
 		ImGui::PopStyleColor();
 		ImGui::Text("Auto: ");
 		ImGui::SameLine();
 		ImGui::Checkbox("Exit", &g_injector->shouldAutoExit);    //Whether to auto exit after injection
 		ImGui::SameLine();
 		ImGui::Checkbox("Start", &g_injector->shouldAutoStart);  //Whether to auto start game after patching VAC
+		if (g_injector->shouldAutoStart)
+		{
+			std::wstring opts = vars::str_game_launch_opts;
+			std::string str;
+			std::transform(opts.begin(), opts.end(), std::back_inserter(str), [](wchar_t c) {
+				return char(c);
+				});
+			char buf[256];
+			memset(buf, 0, sizeof(buf));
+			memcpy_s(buf, sizeof(buf), str.c_str(), str.length());
+			ImGui::InputText("OPTS", buf, sizeof(buf));
+			opts.clear();
+			std::transform(std::begin(buf), std::end(buf), std::back_inserter(opts), [](char c) {
+				return wchar_t(c);
+			});
+			vars::str_game_launch_opts = opts;
+		}
 		static int selectedDLL = 0;
 		this->mtx.lock();
 		std::vector<std::string> paths = this->filePaths;
@@ -124,7 +150,7 @@ void Menu::loop()
 		ImGui::SameLine(0.0f, -1.0f);
 		if (ImGui::Button("Inject"))
 		{
-			if(!this->isInjecting)
+			if(!this->isInjecting && !paths.empty())
 				std::thread(&Injector::inject, g_injector.get(), paths[selectedDLL]).detach();
 		}
 		if (this->isPatchingVac)

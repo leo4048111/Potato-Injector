@@ -9,6 +9,6 @@ namespace vars
 	inline std::wstring_view str_steam_mod_name{ L"tier0_s.dll" };
 	inline std::wstring_view str_game_mod_name{ L"serverbrowser.dll" };
 	inline uint32_t game_appid{ 730 };
-	inline std::wstring_view str_game_launch_opts{ L"-console -worldwide -novid" };
+	inline std::wstring str_game_launch_opts{ L"-console -worldwide -novid" };
 	inline std::wstring_view str_dll_dir_path{ L"./dlls" };
 }
