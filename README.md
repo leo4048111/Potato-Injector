@@ -12,7 +12,7 @@
 + Put both .lib files under `$(ProjectDir)\dependency\blackbone\Lib`
 ## How to use?
 + Click `Patch VAC3`, then steam will close then automatically open.
-+ Put dlls in .dll folder.
++ Put all .dll files in `dlls` folder(automatically created).
 + Select the dll to inject, make sure CSGO game is up and running, then click `inject` to start injection.
 + Other labels and controls should be straightforward enough to comprehend.
 ## Credits
