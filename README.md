@@ -1,6 +1,6 @@
 # Potato Injector
 ## Info
- A simple GUI CSGO injector with VAC bypass, capable of injecting a selected dll into CSGO game process.
+ A simple GUI CSGO injector with VAC bypass, capable of injecting a selected dll into CSGO game process
 ## Screenshot
 ![Screenshot1](https://raw.githubusercontent.com/leo4048111/Potato-Injector/main/screenshots/screenshot1.png)  
 ![Screenshot2](https://raw.githubusercontent.com/leo4048111/Potato-Injector/main/screenshots/screenshot2.png)  
