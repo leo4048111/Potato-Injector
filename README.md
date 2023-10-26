@@ -21,3 +21,5 @@
 + https://github.com/DarthTon/Blackbone
 ## Notice
 ***Use this injector at your own risk.***
+## Update
+*** Not sure whether this injector still works on CS2(Haven't been playing CS for a while), please leave issues to let me know...
