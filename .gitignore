@@ -25,6 +25,8 @@
 *.lai
 *.la
 *.a
+!BlackBone.lib
+!BlackBone-d.lib
 
 # Executables
 *.exe
