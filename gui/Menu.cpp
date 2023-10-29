@@ -2,6 +2,7 @@
 #include "Menu.hpp"
 
 #include "dependency/imgui/imgui.h"
+#include "dependency/imgui/imgui_internal.h"
 #include "dependency/imgui/backend/imgui_impl_dx9.h"
 #include "dependency/imgui/backend/imgui_impl_win32.h"
 
@@ -16,7 +17,7 @@ bool Menu::initialize()
 	::RegisterClassEx(&wc);
 	this->hwnd = ::CreateWindow(wc.lpszClassName, _T("Potato Injector"),
 		WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
-		100, 100, 200, 210, NULL, NULL, wc.hInstance, NULL);
+		100, 100, 200, 230, NULL, NULL, wc.hInstance, NULL);
 	::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE)
 		& WS_CAPTION & ~WS_THICKFRAME);
 	::SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
@@ -140,11 +141,14 @@ void Menu::loop()
 		}
 		
 		ImGui::Combo("DLLS", &selectedDLL, comboPaths.c_str());
+		ImGui::Text("Patch outdated, WOI...");
+		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 		if (ImGui::Button("Patch VAC3"))
 		{
 			if(!this->isPatchingVac)
 				std::thread(&Injector::bypassVAC, g_injector.get()).detach();
 		}
+		ImGui::PopItemFlag();
 		ImGui::SameLine(0.0f, -1.0f);
 		if (ImGui::Button("Inject"))
 		{
