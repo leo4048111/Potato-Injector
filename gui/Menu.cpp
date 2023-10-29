@@ -103,7 +103,7 @@ void Menu::loop()
 		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->steamRunning ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 0, 0, 255));
 		g_injector->steamRunning ? ImGui::Text("[RUNNING]") : ImGui::Text("[OFFLINE]");
 		ImGui::PopStyleColor();
-		ImGui::Text("CSGO Status: ");
+		ImGui::Text("CS2 Status: ");
 		ImGui::SameLine();
 		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->csgoRunning ? (this->isInjecting ? IM_COL32(255, 255, 0, alpha) : IM_COL32(0, 255, 0, 255)) : IM_COL32(255, 0, 0, 255));
 		g_injector->csgoRunning ? (this->isInjecting ? ImGui::Text("[INJECTING]") : ImGui::Text("[RUNNING]")) : ImGui::Text("[OFFLINE]");
