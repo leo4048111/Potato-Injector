@@ -108,7 +108,8 @@ bool Injector::map(std::wstring_view procname, std::wstring_view modname, std::v
 			proc.Detach();
 			return false;
 		}
-		for (const auto& mod : proc.modules().GetAllModules()) {
+		auto mods = proc.modules().GetAllModules();
+		for (const auto& mod : mods) {
 			if (mod.first.first == modname)
 			{
 				modReady = true;
