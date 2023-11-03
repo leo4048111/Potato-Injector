@@ -10,6 +10,8 @@
 + Installed [DirectX Software Development Kit](https://www.microsoft.com/en-us/download/details.aspx?id=6812)
 + [BlackBone Static Library](https://github.com/DarthTon/Blackbone), build the project into `BlackBone.lib`(Release build) and `BlackBone-d.lib`(Debug build)
 + Put both .lib files under `$(ProjectDir)\dependency\blackbone\Lib`
+## How this injector works?
++ This injector uses blackbone::Process::mmap().MapImage(which is a widely used manual map implementation) to map dll into target process memory. For safety concerns, you can also optionally choose to patch vac3_bypass.hpp(which is another dll dumped to bytecode) into steam before injecting your own dll. This vac3_bypass will disable any steam verification routines so your module stays undetected when game runs.
 ## How to use?
 + Click `Patch VAC3`, then steam will close then automatically open.
 + Put all .dll files in `dlls` folder(automatically created).
