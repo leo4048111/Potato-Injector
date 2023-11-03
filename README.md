@@ -20,8 +20,8 @@
 + https://github.com/ocornut/imgui
 + https://github.com/DarthTon/Blackbone
 ## Notice
-***Use this injector at your own risk.***
-***You can optionally change vac3_bypass/vac3_bypass.hpp to your own vac3 bypass method, the one in this project has been deprecated and is risky to use***
++ ***Use this injector at your own risk.***
++ ***You can optionally change vac3_bypass/vac3_bypass.hpp to your own vac3 bypass method, the one in this project has been deprecated and is risky to use***
 ## Update
 + Compatibility updates, now works on CS2 smoothly...
 + For legacy CS:GO version, get it from Release v1.0 Executable(For CS:GO)
