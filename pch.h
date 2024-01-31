@@ -5,6 +5,7 @@
 #include <fstream>
 #include <filesystem>
 #include <thread>
+#include <cwctype>
 
 #include <windows.h>
 

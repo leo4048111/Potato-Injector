@@ -68,10 +68,19 @@ bool Injector::inject(std::string dllPath)
 		return false;
 	}
 
-	if (!this->map(vars::str_game_process_name.data(), vars::str_game_mod_name.data(), buffer))
-	{
-		g_menu->isInjecting = false;
-		return false;
+	if(this->isCustomProcess) {
+		if (!this->map(customProcessName, customProcessName, buffer))
+		{
+			g_menu->isInjecting = false;
+			return false;
+		}
+	}
+	else {
+		if (!this->map(vars::str_game_process_name.data(), vars::str_game_mod_name.data(), buffer))
+		{
+			g_menu->isInjecting = false;
+			return false;
+		}
 	}
 
 	g_menu->isInjecting = false;
@@ -109,8 +118,16 @@ bool Injector::map(std::wstring_view procname, std::wstring_view modname, std::v
 			return false;
 		}
 		auto mods = proc.modules().GetAllModules();
+
+		auto toLower = [](const std::wstring& str) {
+			std::wstring lowerStr = str;
+			std::transform(lowerStr.begin(), lowerStr.end(), lowerStr.begin(),
+				[](wchar_t c) { return std::towlower(c); });
+			return lowerStr;
+			};
+
 		for (const auto& mod : mods) {
-			if (mod.first.first == modname)
+			if (toLower(mod.first.first) == toLower(modname.data()))
 			{
 				modReady = true;
 				break;

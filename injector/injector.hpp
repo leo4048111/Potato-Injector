@@ -20,6 +20,9 @@ public:
 
 	bool shouldAutoExit{ false };
 	bool shouldAutoStart{ false };
+	bool isCustomProcess{ false };
+
+	::std::wstring customProcessName{ L"godmode.exe" };
 
 private:
 	static Injector* m_inst;

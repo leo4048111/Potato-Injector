@@ -28,3 +28,4 @@
 ## Update
 + Compatibility updates, now works on CS2 smoothly...
 + For legacy CS:GO version, get it from Release v1.0 Executable(For CS:GO)
++ Added custom process selection in v3.0

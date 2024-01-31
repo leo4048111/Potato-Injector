@@ -17,7 +17,7 @@ bool Menu::initialize()
 	::RegisterClassEx(&wc);
 	this->hwnd = ::CreateWindow(wc.lpszClassName, _T("Potato Injector"),
 		WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
-		100, 100, 200, 230, NULL, NULL, wc.hInstance, NULL);
+		100, 100, 200, 270, NULL, NULL, wc.hInstance, NULL);
 	::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE)
 		& WS_CAPTION & ~WS_THICKFRAME);
 	::SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
@@ -82,11 +82,11 @@ void Menu::loop()
 		static int counter = 0;
 		if (!g_injector->shouldAutoStart)
 		{
-			ImGui::SetNextWindowSize({ 200, 210 });
+			ImGui::SetNextWindowSize({ 200, 250 });
 		}
 		else
 		{
-			ImGui::SetNextWindowSize({ 200, 235 });
+			ImGui::SetNextWindowSize({ 200, 270 });
 		}
 		ImGui::SetNextWindowPos({ 0, 0 });
 		ImGui::Begin("Menu", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
@@ -113,6 +113,24 @@ void Menu::loop()
 		ImGui::Checkbox("Exit", &g_injector->shouldAutoExit);    //Whether to auto exit after injection
 		ImGui::SameLine();
 		ImGui::Checkbox("Start", &g_injector->shouldAutoStart);  //Whether to auto start game after patching VAC
+		ImGui::Checkbox("Custom process", &g_injector->isCustomProcess);  // Enable injection for other processes
+		
+		static int selectedProcess = 0;
+		if (g_injector->isCustomProcess) {
+			std::string procNames = "";
+			auto procs = mem::getProcList();
+			::std::vector<::std::wstring> nameArr;
+			for (const auto& p : procs)
+			{
+				for (wchar_t wc : p.second)
+					procNames += char(wc);
+				procNames += '\0';
+				nameArr.push_back(p.second);
+			}
+			if(ImGui::Combo("##Processes", &selectedProcess, procNames.c_str()))
+				g_injector->customProcessName = nameArr[selectedProcess];
+		}
+
 		if (g_injector->shouldAutoStart)
 		{
 			std::wstring opts = vars::str_game_launch_opts;
@@ -141,19 +159,31 @@ void Menu::loop()
 		}
 		
 		ImGui::Combo("DLLS", &selectedDLL, comboPaths.c_str());
-		ImGui::Text("Patch outdated, WOI...");
-		ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
+		//ImGui::Text("Patch outdated, WOI...");
+		//ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
 		if (ImGui::Button("Patch VAC3"))
 		{
 			if(!this->isPatchingVac)
 				std::thread(&Injector::bypassVAC, g_injector.get()).detach();
 		}
-		ImGui::PopItemFlag();
+		//ImGui::PopItemFlag();
 		ImGui::SameLine(0.0f, -1.0f);
 		if (ImGui::Button("Inject"))
 		{
-			if(!this->isInjecting && !paths.empty())
-				std::thread(&Injector::inject, g_injector.get(), paths[selectedDLL]).detach();
+			if (!this->isInjecting)
+			{
+				bool valid = true;
+				if (g_injector->isCustomProcess)
+				{
+					auto pid = mem::getProcID(g_injector->customProcessName);
+					if (pid == NULL) {
+						MessageBox(hwnd, L"Custom process not found...", nullptr, 0);
+						valid = false;
+					}
+				}
+				if (valid && !paths.empty())
+					std::thread(&Injector::inject, g_injector.get(), paths[selectedDLL]).detach();
+			}
 		}
 		if (this->isPatchingVac)
 		{

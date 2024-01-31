@@ -3,8 +3,21 @@
 
 namespace mem
 {
-	inline std::vector<std::pair<std::uint32_t, std::wstring>> getProcList() {
-		std::vector<std::pair<std::uint32_t, std::wstring>> procList;
+	struct CompareProc {
+		bool operator()(const std::pair<std::uint32_t, std::wstring>& lhs, const std::pair<std::uint32_t, std::wstring>& rhs) const {
+			return lhs.second < rhs.second;
+		}
+	};
+
+	inline bool isSystemProcess(const std::wstring& name) {
+		static const std::set<std::wstring> systemProcesses = {
+			L"System", L"svchost.exe", L"csrss.exe", L"smss.exe", L"wininit.exe", L"services.exe"
+		};
+		return systemProcesses.find(name) != systemProcesses.end();
+	}
+
+	inline std::set<std::pair<std::uint32_t, std::wstring>, CompareProc> getProcList() {
+		std::set<std::pair<std::uint32_t, std::wstring>, CompareProc> procList;
 
 		auto hSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 
@@ -12,12 +25,15 @@ namespace mem
 		e.dwSize = sizeof(e);
 
 		if (!Process32First(hSnap, &e)) {
+			CloseHandle(hSnap);
 			return {};
 		}
 
-		while (Process32Next(hSnap, &e)) {
-			procList.push_back(std::make_pair(e.th32ProcessID, e.szExeFile));
-		}
+		do {
+			if (!isSystemProcess(e.szExeFile)) {
+				procList.insert(std::make_pair(e.th32ProcessID, e.szExeFile));
+			}
+		} while (Process32Next(hSnap, &e));
 
 		CloseHandle(hSnap);
 		return procList;
