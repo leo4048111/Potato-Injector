@@ -1,5 +1,4 @@
 # Potato Injector
-# [Download](https://github.com/vmerhoushigirl1/vmerhoushigirl1/releases/tag/v1.5.2)
 ## Info
  A simple GUI CSGO/CS2 injector with VAC bypass, capable of injecting a selected dll into CSGO game process. Latest release supports CS2...
 ## Screenshot
