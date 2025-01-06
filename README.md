@@ -25,6 +25,7 @@
 ## Notice
 + ***Use this injector at your own risk.***
 + ***You can optionally change vac3_bypass/vac3_bypass.hpp to your own vac3 bypass method, the one in this project has been deprecated and is risky to use***
++ ***Due to my current workload, I haven't been able to actively maintain this injector lately. Would greatly appreciate any PRs for bug fixes or new features. Contributors are more than welcome!***
 ## Update
 + Compatibility updates, now works on CS2 smoothly...
 + For legacy CS:GO version, get it from Release v1.0 Executable(For CS:GO)
