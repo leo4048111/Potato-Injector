@@ -41,6 +41,7 @@ private:
 
 	bool isMenuOn{ false };
 	bool isInjecting{ false };
+	bool isDarkTheme{ true };
 
 	std::vector<std::string> filePaths;
 	int selectedProcess{ 0 };

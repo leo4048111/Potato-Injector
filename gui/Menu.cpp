@@ -38,11 +38,8 @@ bool Menu::initialize()
 	::RegisterClassEx(&wc);
 	const auto windowTitle = makeRandomWindowTitle();
 	this->hwnd = ::CreateWindow(wc.lpszClassName, windowTitle.c_str(),
-		WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
-		100, 100, 360, 430, NULL, NULL, wc.hInstance, NULL);
-	::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE)
-		& WS_CAPTION & ~WS_THICKFRAME);
-	::SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
+		WS_POPUP,
+		100, 100, 500, 640, NULL, NULL, wc.hInstance, NULL);
 
 	// Initialize Direct3D
 	if (!createD3D9Device(hwnd))
@@ -79,8 +76,6 @@ bool Menu::initialize()
 
 void Menu::loop()
 {
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-
 	// Main loop
 	while (this->isMenuOn)
 	{
@@ -100,13 +95,26 @@ void Menu::loop()
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		ImGui::SetNextWindowSize({ 360, 430 });
+		ImGui::SetNextWindowSize({ 500, 640 });
 		ImGui::SetNextWindowPos({ 0, 0 });
-		ImGui::Begin("Potato Injector", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-		ImGui::TextColored(ImVec4(0.35f, 0.70f, 1.00f, 1.00f), "Potato Injector");
-		ImGui::SameLine();
-		ImGui::TextDisabled(" / control panel");
-		ImGui::Separator();
+		ImGui::Begin("Potato Injector", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		ImGui::BeginChild("Hero", ImVec2(0, 78), true);
+		ImGui::BeginGroup();
+		ImGui::TextColored(isDarkTheme ? ImVec4(0.42f, 0.68f, 1.00f, 1.00f) : ImVec4(0.10f, 0.34f, 0.76f, 1.00f), "POTATO INJECTOR");
+		ImGui::TextDisabled("A clean workspace for your selected module");
+		ImGui::EndGroup();
+		ImGui::SameLine(ImGui::GetWindowWidth() - 125.0f);
+		if (ImGui::Button(isDarkTheme ? "Day mode" : "Night mode", ImVec2(104.0f, 30.0f)))
+		{
+			isDarkTheme = !isDarkTheme;
+			setupMenuStyle(isDarkTheme, 1.0f);
+		}
+		ImGui::SameLine(0.0f, 8.0f);
+		if (ImGui::Button("X", ImVec2(28.0f, 30.0f)))
+			::PostMessage(hwnd, WM_CLOSE, 0, 0);
+		ImGui::TextDisabled("%s theme  -  live monitoring enabled", isDarkTheme ? "Night" : "Day");
+		ImGui::EndChild();
+		ImGui::Spacing();
 
 		renderStatusPanel();
 		renderTargetPanel();
@@ -121,7 +129,8 @@ void Menu::loop()
 		this->d3dDevice->SetRenderState(D3DRS_ZENABLE, FALSE);
 		this->d3dDevice->SetRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
 		this->d3dDevice->SetRenderState(D3DRS_SCISSORTESTENABLE, FALSE);
-		D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clear_color.x * clear_color.w * 255.0f), (int)(clear_color.y * clear_color.w * 255.0f), (int)(clear_color.z * clear_color.w * 255.0f), (int)(clear_color.w * 255.0f));
+		const ImVec4 clearColor = isDarkTheme ? ImVec4(0.025f, 0.035f, 0.055f, 1.0f) : ImVec4(0.82f, 0.86f, 0.92f, 1.0f);
+		D3DCOLOR clear_col_dx = D3DCOLOR_RGBA((int)(clearColor.x * 255.0f), (int)(clearColor.y * 255.0f), (int)(clearColor.z * 255.0f), 255);
 		this->d3dDevice->Clear(0, NULL, D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER, clear_col_dx, 1.0f, 0);
 		if (this->d3dDevice->BeginScene() >= 0)
 		{
@@ -179,6 +188,17 @@ LRESULT __stdcall Menu::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 	switch (msg)
 	{
+	case WM_NCHITTEST:
+	{
+		POINT cursor{
+			static_cast<LONG>(static_cast<short>(LOWORD(lParam))),
+			static_cast<LONG>(static_cast<short>(HIWORD(lParam))) };
+		::ScreenToClient(hWnd, &cursor);
+		// Keep the Hero area draggable while leaving the theme and close buttons clickable.
+		if (cursor.y >= 0 && cursor.y < 78 && cursor.x < 330)
+			return HTCAPTION;
+		break;
+	}
 	case WM_SYSCOMMAND:
 		if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
 			return 0;
@@ -192,29 +212,32 @@ LRESULT __stdcall Menu::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 
 void Menu::renderStatusPanel()
 {
-	if (ImGui::CollapsingHeader("STATUS", ImGuiTreeNodeFlags_DefaultOpen))
-	{
-		ImGui::BeginChild("StatusPanel", ImVec2(0, 78), true);
-		const auto status = [](const char* label, bool active, const char* activeText, const char* inactiveText)
-		{
-			ImGui::TextUnformatted(label);
-			ImGui::SameLine(122.0f);
-			ImGui::PushStyleColor(ImGuiCol_Text, active ? ImVec4(0.35f, 0.85f, 0.45f, 1.0f) : ImVec4(0.95f, 0.40f, 0.40f, 1.0f));
-			ImGui::Text("%s", active ? activeText : inactiveText);
-			ImGui::PopStyleColor();
-		};
+	ImGui::BeginChild("StatusPanel", ImVec2(0, 112), true);
+	ImGui::TextDisabled("SYSTEM STATUS");
+	ImGui::SameLine(ImGui::GetWindowWidth() - 96.0f);
+		ImGui::TextColored(ImVec4(0.35f, 0.82f, 0.55f, 1.0f), "ONLINE");
+	ImGui::Separator();
 
-		status("Steam", g_injector->steamRunning, "RUNNING", "OFFLINE");
-		status("CS2", g_injector->csgoRunning, this->isInjecting ? "INJECTING" : "RUNNING", "OFFLINE");
-		ImGui::TextDisabled("VAC3 patching is disabled");
-		ImGui::EndChild();
-	}
+	const auto status = [](const char* label, bool active, const char* activeText, const char* inactiveText)
+	{
+		ImGui::TextColored(active ? ImVec4(0.35f, 0.85f, 0.55f, 1.0f) : ImVec4(0.92f, 0.38f, 0.42f, 1.0f), ">>");
+		ImGui::SameLine();
+		ImGui::TextUnformatted(label);
+		ImGui::SameLine(178.0f);
+		ImGui::TextColored(active ? ImVec4(0.35f, 0.85f, 0.55f, 1.0f) : ImVec4(0.92f, 0.38f, 0.42f, 1.0f), "%s", active ? activeText : inactiveText);
+	};
+
+	status("Steam", g_injector->steamRunning, "RUNNING", "OFFLINE");
+	status("CS2", g_injector->csgoRunning, this->isInjecting ? "INJECTING" : "RUNNING", "OFFLINE");
+	ImGui::TextDisabled("VAC3 patching is disabled");
+	ImGui::EndChild();
 }
 
 void Menu::renderTargetPanel()
 {
-	if (ImGui::CollapsingHeader("TARGET", ImGuiTreeNodeFlags_DefaultOpen))
-	{
+	ImGui::BeginChild("TargetPanel", ImVec2(0, 150), true);
+		ImGui::TextDisabled("TARGET PROCESS");
+		ImGui::Separator();
 		ImGui::Checkbox("Auto-close after operation", &g_injector->shouldAutoExit);
 		ImGui::Checkbox("Use custom process", &g_injector->isCustomProcess);
 
@@ -243,7 +266,11 @@ void Menu::renderTargetPanel()
 				ImGui::TextDisabled("No running processes found");
 			}
 		}
-	}
+		else
+		{
+			ImGui::TextDisabled("Target: Counter-Strike 2");
+		}
+	ImGui::EndChild();
 }
 
 std::vector<std::string> Menu::snapshotDllPaths()
@@ -254,11 +281,14 @@ std::vector<std::string> Menu::snapshotDllPaths()
 
 void Menu::renderInjectionPanel(const std::vector<std::string>& paths)
 {
-	if (ImGui::CollapsingHeader("MODULE", ImGuiTreeNodeFlags_DefaultOpen))
-	{
+	ImGui::BeginChild("ModulePanel", ImVec2(0, 0), true);
+		ImGui::TextDisabled("MODULE WORKSPACE");
+		ImGui::Separator();
 		if (paths.empty())
 		{
 			ImGui::TextDisabled("No DLL files found in ./dlls");
+			ImGui::Spacing();
+			ImGui::TextWrapped("Place a DLL in the dlls folder to make it available here.");
 		}
 		else
 		{
@@ -278,7 +308,10 @@ void Menu::renderInjectionPanel(const std::vector<std::string>& paths)
 		const bool canInject = !paths.empty() && !this->isInjecting;
 		if (!canInject)
 			ImGui::BeginDisabled();
-		if (ImGui::Button("Inject", ImVec2(-1.0f, 34.0f)) && canInject)
+		ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.20f, 0.52f, 0.92f, canInject ? 1.0f : 0.35f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.28f, 0.63f, 1.0f, 1.0f));
+		ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.12f, 0.40f, 0.82f, 1.0f));
+		if (ImGui::Button(this->isInjecting ? "Injecting..." : "Inject selected module", ImVec2(-1.0f, 42.0f)) && canInject)
 		{
 			bool valid = true;
 			if (g_injector->isCustomProcess && mem::getProcID(g_injector->customProcessName) == NULL)
@@ -291,99 +324,71 @@ void Menu::renderInjectionPanel(const std::vector<std::string>& paths)
 		}
 		if (!canInject)
 			ImGui::EndDisabled();
+		ImGui::PopStyleColor(3);
 
 		if (this->isInjecting)
 			ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.25f, 1.0f), "Injecting module...");
-	}
+	ImGui::EndChild();
 }
 
 void Menu::setupMenuStyle(bool isDarkTheme, float alpha)
 {
 	ImGuiStyle& style = ImGui::GetStyle();
 
-	style.Alpha = 1.0f;
-	style.WindowPadding = ImVec2(16.0f, 14.0f);
-	style.FramePadding = ImVec2(9.0f, 7.0f);
-	style.ItemSpacing = ImVec2(8.0f, 8.0f);
-	style.ItemInnerSpacing = ImVec2(6.0f, 5.0f);
-	style.WindowRounding = 10.0f;
-	style.ChildRounding = 8.0f;
-	style.FrameRounding = 6.0f;
-	style.PopupRounding = 6.0f;
-	style.ScrollbarRounding = 8.0f;
-	style.GrabRounding = 6.0f;
+	style = ImGuiStyle();
+	style.Alpha = alpha;
+	style.WindowPadding = ImVec2(18.0f, 16.0f);
+	style.FramePadding = ImVec2(10.0f, 8.0f);
+	style.ItemSpacing = ImVec2(10.0f, 10.0f);
+	style.ItemInnerSpacing = ImVec2(7.0f, 6.0f);
+	style.WindowRounding = 16.0f;
+	style.ChildRounding = 12.0f;
+	style.FrameRounding = 9.0f;
+	style.PopupRounding = 10.0f;
+	style.ScrollbarRounding = 10.0f;
+	style.GrabRounding = 9.0f;
+	style.TabRounding = 9.0f;
 	style.WindowBorderSize = 1.0f;
 	style.ChildBorderSize = 1.0f;
 	style.FrameBorderSize = 0.0f;
-	style.Colors[ImGuiCol_Text] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
-	style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
-	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.94f, 0.94f, 0.94f, 0.94f);
-	style.Colors[ImGuiCol_PopupBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
-	style.Colors[ImGuiCol_Border] = ImVec4(0.00f, 0.00f, 0.00f, 0.39f);
-	style.Colors[ImGuiCol_BorderShadow] = ImVec4(1.00f, 1.00f, 1.00f, 0.10f);
-	style.Colors[ImGuiCol_FrameBg] = ImVec4(1.00f, 1.00f, 1.00f, 0.94f);
-	style.Colors[ImGuiCol_FrameBgHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
-	style.Colors[ImGuiCol_FrameBgActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-	style.Colors[ImGuiCol_TitleBg] = ImVec4(0.96f, 0.96f, 0.96f, 1.00f);
-	style.Colors[ImGuiCol_TitleBgCollapsed] = ImVec4(1.00f, 1.00f, 1.00f, 0.51f);
-	style.Colors[ImGuiCol_TitleBgActive] = ImVec4(0.82f, 0.82f, 0.82f, 1.00f);
-	style.Colors[ImGuiCol_MenuBarBg] = ImVec4(0.86f, 0.86f, 0.86f, 1.00f);
-	style.Colors[ImGuiCol_ScrollbarBg] = ImVec4(0.98f, 0.98f, 0.98f, 0.53f);
-	style.Colors[ImGuiCol_ScrollbarGrab] = ImVec4(0.69f, 0.69f, 0.69f, 1.00f);
-	style.Colors[ImGuiCol_ScrollbarGrabHovered] = ImVec4(0.59f, 0.59f, 0.59f, 1.00f);
-	style.Colors[ImGuiCol_ScrollbarGrabActive] = ImVec4(0.49f, 0.49f, 0.49f, 1.00f);
-	style.Colors[ImGuiCol_CheckMark] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	style.Colors[ImGuiCol_SliderGrab] = ImVec4(0.24f, 0.52f, 0.88f, 1.00f);
-	style.Colors[ImGuiCol_SliderGrabActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	style.Colors[ImGuiCol_Button] = ImVec4(0.26f, 0.59f, 0.98f, 0.40f);
-	style.Colors[ImGuiCol_ButtonHovered] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	style.Colors[ImGuiCol_ButtonActive] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
-	style.Colors[ImGuiCol_Header] = ImVec4(0.26f, 0.59f, 0.98f, 0.31f);
-	style.Colors[ImGuiCol_HeaderHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.80f);
-	style.Colors[ImGuiCol_HeaderActive] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-	style.Colors[ImGuiCol_ResizeGrip] = ImVec4(1.00f, 1.00f, 1.00f, 0.50f);
-	style.Colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.26f, 0.59f, 0.98f, 0.67f);
-	style.Colors[ImGuiCol_ResizeGripActive] = ImVec4(0.26f, 0.59f, 0.98f, 0.95f);
-	style.Colors[ImGuiCol_PlotLines] = ImVec4(0.39f, 0.39f, 0.39f, 1.00f);
-	style.Colors[ImGuiCol_PlotLinesHovered] = ImVec4(1.00f, 0.43f, 0.35f, 1.00f);
-	style.Colors[ImGuiCol_PlotHistogram] = ImVec4(0.90f, 0.70f, 0.00f, 1.00f);
-	style.Colors[ImGuiCol_PlotHistogramHovered] = ImVec4(1.00f, 0.60f, 0.00f, 1.00f);
-	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
+	style.WindowTitleAlign = ImVec2(0.08f, 0.5f);
 
-	if (isDarkTheme)
-	{
-		for (int i = 0; i <= ImGuiCol_COUNT; i++)
-		{
-			ImVec4& col = style.Colors[i];
-			float H, S, V;
-			ImGui::ColorConvertRGBtoHSV(col.x, col.y, col.z, H, S, V);
+	const ImVec4 accent = isDarkTheme ? ImVec4(0.30f, 0.58f, 1.00f, 1.0f) : ImVec4(0.12f, 0.38f, 0.82f, 1.0f);
+	const ImVec4 accentHover = isDarkTheme ? ImVec4(0.40f, 0.66f, 1.00f, 1.0f) : ImVec4(0.18f, 0.47f, 0.94f, 1.0f);
+	const ImVec4 panel = isDarkTheme ? ImVec4(0.08f, 0.10f, 0.15f, 0.98f) : ImVec4(0.98f, 0.99f, 1.00f, 1.0f);
+	const ImVec4 frame = isDarkTheme ? ImVec4(0.12f, 0.15f, 0.22f, 1.0f) : ImVec4(0.90f, 0.93f, 0.97f, 1.0f);
 
-			if (S < 0.1f)
-			{
-				V = 1.0f - V;
-			}
-			ImGui::ColorConvertHSVtoRGB(H, S, V, col.x, col.y, col.z);
-			if (col.w < 1.00f)
-			{
-				col.w *= alpha;
-			}
-		}
-	}
-	else
-	{
-		for (int i = 0; i <= ImGuiCol_COUNT; i++)
-		{
-			ImVec4& col = style.Colors[i];
-			if (col.w < 1.00f)
-			{
-				col.x *= alpha;
-				col.y *= alpha;
-				col.z *= alpha;
-				col.w *= alpha;
-				col.w *= alpha;
-			}
-		}
-	}
+	style.Colors[ImGuiCol_Text] = isDarkTheme ? ImVec4(0.91f, 0.94f, 0.99f, 1.0f) : ImVec4(0.10f, 0.13f, 0.19f, 1.0f);
+	style.Colors[ImGuiCol_TextDisabled] = isDarkTheme ? ImVec4(0.54f, 0.60f, 0.70f, 1.0f) : ImVec4(0.42f, 0.48f, 0.57f, 1.0f);
+	style.Colors[ImGuiCol_WindowBg] = isDarkTheme ? ImVec4(0.045f, 0.06f, 0.095f, 0.99f) : ImVec4(0.93f, 0.95f, 0.98f, 0.99f);
+	style.Colors[ImGuiCol_ChildBg] = panel;
+	style.Colors[ImGuiCol_PopupBg] = panel;
+	style.Colors[ImGuiCol_Border] = isDarkTheme ? ImVec4(0.20f, 0.26f, 0.38f, 0.65f) : ImVec4(0.72f, 0.78f, 0.88f, 0.9f);
+	style.Colors[ImGuiCol_BorderShadow] = ImVec4(0, 0, 0, 0);
+	style.Colors[ImGuiCol_FrameBg] = frame;
+	style.Colors[ImGuiCol_FrameBgHovered] = isDarkTheme ? ImVec4(0.17f, 0.22f, 0.32f, 1.0f) : ImVec4(0.82f, 0.87f, 0.95f, 1.0f);
+	style.Colors[ImGuiCol_FrameBgActive] = isDarkTheme ? ImVec4(0.20f, 0.28f, 0.42f, 1.0f) : ImVec4(0.76f, 0.84f, 0.95f, 1.0f);
+	style.Colors[ImGuiCol_TitleBg] = style.Colors[ImGuiCol_WindowBg];
+	style.Colors[ImGuiCol_TitleBgActive] = style.Colors[ImGuiCol_WindowBg];
+	style.Colors[ImGuiCol_MenuBarBg] = panel;
+	style.Colors[ImGuiCol_ScrollbarBg] = style.Colors[ImGuiCol_WindowBg];
+	style.Colors[ImGuiCol_ScrollbarGrab] = isDarkTheme ? ImVec4(0.24f, 0.31f, 0.43f, 1.0f) : ImVec4(0.68f, 0.75f, 0.85f, 1.0f);
+	style.Colors[ImGuiCol_ScrollbarGrabHovered] = accent;
+	style.Colors[ImGuiCol_ScrollbarGrabActive] = accentHover;
+	style.Colors[ImGuiCol_CheckMark] = accentHover;
+	style.Colors[ImGuiCol_SliderGrab] = accent;
+	style.Colors[ImGuiCol_SliderGrabActive] = accentHover;
+	style.Colors[ImGuiCol_Button] = ImVec4(accent.x, accent.y, accent.z, 0.25f);
+	style.Colors[ImGuiCol_ButtonHovered] = ImVec4(accentHover.x, accentHover.y, accentHover.z, 0.85f);
+	style.Colors[ImGuiCol_ButtonActive] = accent;
+	style.Colors[ImGuiCol_Header] = ImVec4(accent.x, accent.y, accent.z, 0.22f);
+	style.Colors[ImGuiCol_HeaderHovered] = ImVec4(accentHover.x, accentHover.y, accentHover.z, 0.45f);
+	style.Colors[ImGuiCol_HeaderActive] = ImVec4(accent.x, accent.y, accent.z, 0.65f);
+	style.Colors[ImGuiCol_Separator] = style.Colors[ImGuiCol_Border];
+	style.Colors[ImGuiCol_SeparatorHovered] = accentHover;
+	style.Colors[ImGuiCol_SeparatorActive] = accent;
+	style.Colors[ImGuiCol_NavHighlight] = accent;
+	style.Colors[ImGuiCol_TextSelectedBg] = ImVec4(accent.x, accent.y, accent.z, 0.35f);
 }
 
 void Menu::detectSteam()
