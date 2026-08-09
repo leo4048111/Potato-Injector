@@ -19,6 +19,14 @@ private:
 
 	void setupMenuStyle(bool isDarkTheme, float alpha);
 
+	void renderStatusPanel();
+
+	void renderTargetPanel();
+
+	std::vector<std::string> snapshotDllPaths();
+
+	void renderInjectionPanel(const std::vector<std::string>& paths);
+
 	void detectSteam();
 
 	void detectGame();
@@ -35,6 +43,8 @@ private:
 	bool isInjecting{ false };
 
 	std::vector<std::string> filePaths;
+	int selectedProcess{ 0 };
+	int selectedDLL{ 0 };
 
 	std::mutex mtx;
 

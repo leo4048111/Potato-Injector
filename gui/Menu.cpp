@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include "Menu.hpp"
 
+#include <algorithm>
+
 #include "dependency/imgui/imgui.h"
 #include "dependency/imgui/imgui_internal.h"
 #include "dependency/imgui/backend/imgui_impl_dx9.h"
@@ -17,7 +19,7 @@ bool Menu::initialize()
 	::RegisterClassEx(&wc);
 	this->hwnd = ::CreateWindow(wc.lpszClassName, _T("Potato Injector"),
 		WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
-		100, 100, 200, 270, NULL, NULL, wc.hInstance, NULL);
+		100, 100, 360, 430, NULL, NULL, wc.hInstance, NULL);
 	::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE)
 		& WS_CAPTION & ~WS_THICKFRAME);
 	::SetWindowPos(hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_FRAMECHANGED);
@@ -78,82 +80,18 @@ void Menu::loop()
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
 
-		static float f = 0.0f;
-		static int counter = 0;
-		ImGui::SetNextWindowSize({ 200, 250 });
+		ImGui::SetNextWindowSize({ 360, 430 });
 		ImGui::SetNextWindowPos({ 0, 0 });
-		ImGui::Begin("Menu", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-		ImGui::Text("VAC3 patch: removed");
-		ImGui::Text("Steam Status: ");
-		ImGui::SameLine(0.0f, 1.0f);
-		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->steamRunning ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 0, 0, 255));
-		g_injector->steamRunning ? ImGui::Text("[RUNNING]") : ImGui::Text("[OFFLINE]");
-		ImGui::PopStyleColor();
-		ImGui::Text("CS2 Status: ");
+		ImGui::Begin("Potato Injector", nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
+		ImGui::TextColored(ImVec4(0.35f, 0.70f, 1.00f, 1.00f), "Potato Injector");
 		ImGui::SameLine();
-		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->csgoRunning ? (this->isInjecting ? IM_COL32(255, 255, 0, alpha) : IM_COL32(0, 255, 0, 255)) : IM_COL32(255, 0, 0, 255));
-		g_injector->csgoRunning ? (this->isInjecting ? ImGui::Text("[INJECTING]") : ImGui::Text("[RUNNING]")) : ImGui::Text("[OFFLINE]");
-		ImGui::PopStyleColor();
-		ImGui::Text("Auto: ");
-		ImGui::SameLine();
-		ImGui::Checkbox("Exit", &g_injector->shouldAutoExit);
-		ImGui::SameLine();
-		ImGui::Checkbox("Custom process", &g_injector->isCustomProcess);  // Enable injection for other processes
-		
-		static int selectedProcess = 0;
-		if (g_injector->isCustomProcess) {
-			std::string procNames = "";
-			auto procs = mem::getProcList();
-			::std::vector<::std::wstring> nameArr;
-			for (const auto& p : procs)
-			{
-				for (wchar_t wc : p.second)
-					procNames += char(wc);
-				procNames += '\0';
-				nameArr.push_back(p.second);
-			}
-			if(ImGui::Combo("##Processes", &selectedProcess, procNames.c_str()))
-				g_injector->customProcessName = nameArr[selectedProcess];
-		}
+		ImGui::TextDisabled(" / control panel");
+		ImGui::Separator();
 
-		static int selectedDLL = 0;
-		this->mtx.lock();
-		std::vector<std::string> paths = this->filePaths;
-		this->mtx.unlock();
-		std::string comboPaths = "";
-		for (const auto& path : paths)
-		{
-			comboPaths += path.substr(path.find_last_of('\\') + 1) + '\0';
-		}
-		
-		ImGui::Combo("DLLS", &selectedDLL, comboPaths.c_str());
-		//ImGui::Text("Patch outdated, WOI...");
-		//ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-		if (ImGui::Button("Inject"))
-		{
-			if (!this->isInjecting)
-			{
-				bool valid = true;
-				if (g_injector->isCustomProcess)
-				{
-					auto pid = mem::getProcID(g_injector->customProcessName);
-					if (pid == NULL) {
-						MessageBox(hwnd, L"Custom process not found...", nullptr, 0);
-						valid = false;
-					}
-				}
-				if (valid && !paths.empty())
-					std::thread(&Injector::inject, g_injector.get(), paths[selectedDLL]).detach();
-			}
-		}
-		if (this->isInjecting)
-		{
-			static int counter = 0;
-			std::string s = "Injecting DLL";
-			for (int i = 0; i < counter / 10; i++) s += ".";
-			counter = counter >= 30 ? 0 : counter + 1;
-			ImGui::Text(s.c_str());
-		}
+		renderStatusPanel();
+		renderTargetPanel();
+		const auto paths = snapshotDllPaths();
+		renderInjectionPanel(paths);
 
 		ImGui::End();
 
@@ -232,13 +170,131 @@ LRESULT __stdcall Menu::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPara
 	return ::DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
+void Menu::renderStatusPanel()
+{
+	if (ImGui::CollapsingHeader("STATUS", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::BeginChild("StatusPanel", ImVec2(0, 78), true);
+		const auto status = [](const char* label, bool active, const char* activeText, const char* inactiveText)
+		{
+			ImGui::TextUnformatted(label);
+			ImGui::SameLine(122.0f);
+			ImGui::PushStyleColor(ImGuiCol_Text, active ? ImVec4(0.35f, 0.85f, 0.45f, 1.0f) : ImVec4(0.95f, 0.40f, 0.40f, 1.0f));
+			ImGui::Text("%s", active ? activeText : inactiveText);
+			ImGui::PopStyleColor();
+		};
+
+		status("Steam", g_injector->steamRunning, "RUNNING", "OFFLINE");
+		status("CS2", g_injector->csgoRunning, this->isInjecting ? "INJECTING" : "RUNNING", "OFFLINE");
+		ImGui::TextDisabled("VAC3 patching is disabled");
+		ImGui::EndChild();
+	}
+}
+
+void Menu::renderTargetPanel()
+{
+	if (ImGui::CollapsingHeader("TARGET", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		ImGui::Checkbox("Auto-close after operation", &g_injector->shouldAutoExit);
+		ImGui::Checkbox("Use custom process", &g_injector->isCustomProcess);
+
+		if (g_injector->isCustomProcess)
+		{
+			auto processes = mem::getProcList();
+			std::string processItems;
+			std::vector<std::wstring> processNames;
+			for (const auto& process : processes)
+			{
+				for (const auto character : process.second)
+					processItems += static_cast<char>(character);
+				processItems.push_back('\0');
+				processNames.push_back(process.second);
+			}
+			processItems.push_back('\0');
+
+			if (!processNames.empty())
+			{
+				this->selectedProcess = std::clamp(this->selectedProcess, 0, static_cast<int>(processNames.size()) - 1);
+				if (ImGui::Combo("Process", &this->selectedProcess, processItems.c_str()))
+					g_injector->customProcessName = processNames[this->selectedProcess];
+			}
+			else
+			{
+				ImGui::TextDisabled("No running processes found");
+			}
+		}
+	}
+}
+
+std::vector<std::string> Menu::snapshotDllPaths()
+{
+	std::scoped_lock lock(this->mtx);
+	return this->filePaths;
+}
+
+void Menu::renderInjectionPanel(const std::vector<std::string>& paths)
+{
+	if (ImGui::CollapsingHeader("MODULE", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (paths.empty())
+		{
+			ImGui::TextDisabled("No DLL files found in ./dlls");
+		}
+		else
+		{
+			std::string dllItems;
+			for (const auto& path : paths)
+			{
+				const auto separator = path.find_last_of("\\/");
+				dllItems += path.substr(separator == std::string::npos ? 0 : separator + 1);
+				dllItems.push_back('\0');
+			}
+			dllItems.push_back('\0');
+			this->selectedDLL = std::clamp(this->selectedDLL, 0, static_cast<int>(paths.size()) - 1);
+			ImGui::Combo("DLL", &this->selectedDLL, dllItems.c_str());
+		}
+
+		ImGui::Spacing();
+		const bool canInject = !paths.empty() && !this->isInjecting;
+		if (!canInject)
+			ImGui::BeginDisabled();
+		if (ImGui::Button("Inject", ImVec2(-1.0f, 34.0f)) && canInject)
+		{
+			bool valid = true;
+			if (g_injector->isCustomProcess && mem::getProcID(g_injector->customProcessName) == NULL)
+			{
+				MessageBox(hwnd, L"Custom process not found...", nullptr, 0);
+				valid = false;
+			}
+			if (valid)
+				std::thread(&Injector::inject, g_injector.get(), paths[this->selectedDLL]).detach();
+		}
+		if (!canInject)
+			ImGui::EndDisabled();
+
+		if (this->isInjecting)
+			ImGui::TextColored(ImVec4(1.0f, 0.75f, 0.25f, 1.0f), "Injecting module...");
+	}
+}
+
 void Menu::setupMenuStyle(bool isDarkTheme, float alpha)
 {
 	ImGuiStyle& style = ImGui::GetStyle();
 
-	// light style from Pacôme Danhiez (user itamago) https://github.com/ocornut/imgui/pull/511#issuecomment-175719267
 	style.Alpha = 1.0f;
-	style.FrameRounding = 3.0f;
+	style.WindowPadding = ImVec2(16.0f, 14.0f);
+	style.FramePadding = ImVec2(9.0f, 7.0f);
+	style.ItemSpacing = ImVec2(8.0f, 8.0f);
+	style.ItemInnerSpacing = ImVec2(6.0f, 5.0f);
+	style.WindowRounding = 10.0f;
+	style.ChildRounding = 8.0f;
+	style.FrameRounding = 6.0f;
+	style.PopupRounding = 6.0f;
+	style.ScrollbarRounding = 8.0f;
+	style.GrabRounding = 6.0f;
+	style.WindowBorderSize = 1.0f;
+	style.ChildBorderSize = 1.0f;
+	style.FrameBorderSize = 0.0f;
 	style.Colors[ImGuiCol_Text] = ImVec4(0.00f, 0.00f, 0.00f, 1.00f);
 	style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.60f, 0.60f, 0.60f, 1.00f);
 	style.Colors[ImGuiCol_WindowBg] = ImVec4(0.94f, 0.94f, 0.94f, 0.94f);
