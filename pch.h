@@ -4,10 +4,17 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
-#include <random>
+#include <algorithm>
+#include <atomic>
+#include <cstdint>
+#include <limits>
+#include <sstream>
 #include <thread>
 #include <cwctype>
 
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
 #include <windows.h>
 
 #include <d3d9.h>

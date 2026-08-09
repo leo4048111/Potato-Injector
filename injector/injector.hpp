@@ -23,7 +23,7 @@ public:
 private:
 	static Injector* m_inst;
 
-	bool map(std::wstring_view procname, std::wstring_view modname, std::vector<BYTE> buffer, blackbone::eLoadFlags flags = blackbone::WipeHeader);
+	bool map(std::wstring_view procname, std::wstring_view modname, const std::vector<BYTE>& buffer, blackbone::eLoadFlags flags = blackbone::NoFlags);
 
 };
 

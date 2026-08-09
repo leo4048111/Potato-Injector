@@ -1,4 +1,6 @@
 #pragma once
+#include <atomic>
+
 class Menu
 {
 	friend Injector;
@@ -39,8 +41,8 @@ private:
 	D3DPRESENT_PARAMETERS    d3dpp = {};
 	HWND					 hwnd{ NULL };
 
-	bool isMenuOn{ false };
-	bool isInjecting{ false };
+	std::atomic_bool isMenuOn{ false };
+	std::atomic_bool isInjecting{ false };
 	bool isDarkTheme{ true };
 
 	std::vector<std::string> filePaths;
