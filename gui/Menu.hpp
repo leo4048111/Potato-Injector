@@ -32,7 +32,6 @@ private:
 	HWND					 hwnd{ NULL };
 
 	bool isMenuOn{ false };
-	bool isPatchingVac{ false };
 	bool isInjecting{ false };
 
 	std::vector<std::string> filePaths;

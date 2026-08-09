@@ -80,24 +80,10 @@ void Menu::loop()
 
 		static float f = 0.0f;
 		static int counter = 0;
-		if (!g_injector->shouldAutoStart)
-		{
-			ImGui::SetNextWindowSize({ 200, 250 });
-		}
-		else
-		{
-			ImGui::SetNextWindowSize({ 200, 270 });
-		}
+		ImGui::SetNextWindowSize({ 200, 250 });
 		ImGui::SetNextWindowPos({ 0, 0 });
 		ImGui::Begin("Menu", 0, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize);
-		ImGui::Text("VAC3 Status: ");               
-		ImGui::SameLine();
-		static int cnt = 0;
-		cnt = cnt + 13 >= 2 * 255 ? 0 : cnt + 13;
-		int alpha = cnt >= 255 ? cnt : 2 * 255 - cnt;
-		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->vacBypassed ? IM_COL32(0, 255, 0, 255) : (this->isPatchingVac ? IM_COL32(255, 255, 0, alpha) : IM_COL32(255, 0, 0, 255)));
-		g_injector->vacBypassed ? ImGui::Text("[BYPASSED]") : (this->isPatchingVac ? ImGui::Text("[PATCHING]") : ImGui::Text("[INSECURE]"));
-		ImGui::PopStyleColor();
+		ImGui::Text("VAC3 patch: removed");
 		ImGui::Text("Steam Status: ");
 		ImGui::SameLine(0.0f, 1.0f);
 		ImGui::PushStyleColor(ImGuiCol_Text, g_injector->steamRunning ? IM_COL32(0, 255, 0, 255) : IM_COL32(255, 0, 0, 255));
@@ -110,9 +96,8 @@ void Menu::loop()
 		ImGui::PopStyleColor();
 		ImGui::Text("Auto: ");
 		ImGui::SameLine();
-		ImGui::Checkbox("Exit", &g_injector->shouldAutoExit);    //Whether to auto exit after injection
+		ImGui::Checkbox("Exit", &g_injector->shouldAutoExit);
 		ImGui::SameLine();
-		ImGui::Checkbox("Start", &g_injector->shouldAutoStart);  //Whether to auto start game after patching VAC
 		ImGui::Checkbox("Custom process", &g_injector->isCustomProcess);  // Enable injection for other processes
 		
 		static int selectedProcess = 0;
@@ -131,23 +116,6 @@ void Menu::loop()
 				g_injector->customProcessName = nameArr[selectedProcess];
 		}
 
-		if (g_injector->shouldAutoStart)
-		{
-			std::wstring opts = vars::str_game_launch_opts;
-			std::string str;
-			std::transform(opts.begin(), opts.end(), std::back_inserter(str), [](wchar_t c) {
-				return char(c);
-				});
-			char buf[256];
-			memset(buf, 0, sizeof(buf));
-			memcpy_s(buf, sizeof(buf), str.c_str(), str.length());
-			ImGui::InputText("OPTS", buf, sizeof(buf));
-			opts.clear();
-			std::transform(std::begin(buf), std::end(buf), std::back_inserter(opts), [](char c) {
-				return wchar_t(c);
-			});
-			vars::str_game_launch_opts = opts;
-		}
 		static int selectedDLL = 0;
 		this->mtx.lock();
 		std::vector<std::string> paths = this->filePaths;
@@ -161,13 +129,6 @@ void Menu::loop()
 		ImGui::Combo("DLLS", &selectedDLL, comboPaths.c_str());
 		//ImGui::Text("Patch outdated, WOI...");
 		//ImGui::PushItemFlag(ImGuiItemFlags_Disabled, true);
-		if (ImGui::Button("Patch VAC3"))
-		{
-			if(!this->isPatchingVac)
-				std::thread(&Injector::bypassVAC, g_injector.get()).detach();
-		}
-		//ImGui::PopItemFlag();
-		ImGui::SameLine(0.0f, -1.0f);
 		if (ImGui::Button("Inject"))
 		{
 			if (!this->isInjecting)
@@ -185,15 +146,7 @@ void Menu::loop()
 					std::thread(&Injector::inject, g_injector.get(), paths[selectedDLL]).detach();
 			}
 		}
-		if (this->isPatchingVac)
-		{
-			static int counter = 0;
-			std::string s = "Patching VAC3";
-			for (int i = 0; i < counter / 10; i++) s += ".";
-			counter = counter >= 30 ? 0 : counter + 1;
-			ImGui::Text(s.c_str());
-		}
-		else if (this->isInjecting)
+		if (this->isInjecting)
 		{
 			static int counter = 0;
 			std::string s = "Injecting DLL";
@@ -363,7 +316,6 @@ void Menu::detectSteam()
 	{
 		DWORD pID = mem::getProcID(vars::str_steam_process_name.data());
 		g_injector->steamRunning = !(pID == NULL);
-		g_injector->vacBypassed = (pID == NULL) ? false : g_injector->vacBypassed;
 		std::this_thread::sleep_for(1s);
 	}
 }

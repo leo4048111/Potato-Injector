@@ -115,7 +115,6 @@
     <ClInclude Include="pch.h" />
     <ClInclude Include="memory\memory.hpp" />
     <ClInclude Include="utils\utils.hpp" />
-    <ClInclude Include="vac3_bypass\vac3_bypass.hpp" />
     <ClInclude Include="vars\vars.hpp" />
     <ClInclude Include="winreg\winreg.hpp" />
   </ItemGroup>

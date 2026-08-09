@@ -23,9 +23,6 @@
     <Filter Include="winreg">
       <UniqueIdentifier>{84352510-60ad-43b2-b436-f29f1c69fda5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="vac3_bypass">
-      <UniqueIdentifier>{9670912b-bc2b-4a37-9227-2831c1590b6e}</UniqueIdentifier>
-    </Filter>
     <Filter Include="imgui">
       <UniqueIdentifier>{89fb56d2-27aa-4c1e-b58a-449742ac2ff3}</UniqueIdentifier>
     </Filter>
@@ -86,9 +83,6 @@
     </ClInclude>
     <ClInclude Include="winreg\winreg.hpp">
       <Filter>winreg</Filter>
-    </ClInclude>
-    <ClInclude Include="vac3_bypass\vac3_bypass.hpp">
-      <Filter>vac3_bypass</Filter>
     </ClInclude>
     <ClInclude Include="dependency\imgui\imconfig.h">
       <Filter>imgui</Filter>

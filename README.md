@@ -1,6 +1,6 @@
 # Potato Injector
 ## Info
- A simple GUI CSGO/CS2 injector with VAC bypass, capable of injecting a selected dll into CSGO game process. Latest release supports CS2...
+ A simple GUI for selecting a DLL and displaying Steam/game process status. The former VAC3 patching feature has been removed.
 ## Screenshot
 ![Screenshot1](https://raw.githubusercontent.com/leo4048111/Potato-Injector/main/screenshots/screenshot1.png)  
 ![Screenshot2](https://raw.githubusercontent.com/leo4048111/Potato-Injector/main/screenshots/screenshot2.png)  
@@ -12,9 +12,8 @@
 + Put both .lib files under `$(ProjectDir)\dependency\blackbone\Lib`
 ## How this injector works?
 + This injector uses `blackbone::Process::mmap().MapImage`(which is a widely used manual map implementation) to map dll into target process memory.
-+ For safety concerns, you can also optionally choose to patch vac3_bypass.hpp(which is another dll dumped to bytecode) into steam before injecting your own dll. This vac3_bypass will disable any steam verification routines so your module stays undetected when game runs.
+* The former VAC3 patching feature and embedded patch payload are no longer part of the project.
 ## How to use?
-+ Click `Patch VAC3`, then steam will close then automatically open.
 + Put all .dll files in `dlls` folder(automatically created).
 + Select the dll to inject, make sure CSGO game is up and running, then click `inject` to start injection.
 + Other labels and controls should be straightforward enough to comprehend.
@@ -24,7 +23,6 @@
 + https://github.com/DarthTon/Blackbone
 ## Notice
 + ***Use this injector at your own risk.***
-+ ***You can optionally change vac3_bypass/vac3_bypass.hpp to your own vac3 bypass method, the one in this project has been deprecated and is risky to use***
 + ***Due to my current workload, I haven't been able to actively maintain this injector lately. Would greatly appreciate any PRs for bug fixes or new features. Contributors are more than welcome!***
 ## Update
 + Compatibility updates, now works on CS2 smoothly...

@@ -1,61 +1,11 @@
 #include "pch.h"
 #include "injector.hpp"
-#include "vac3_bypass/vac3_bypass.hpp"
 
 Injector* Injector::m_inst = nullptr;
 
 void Injector::initialize()
 {
 	return;
-}
-
-bool Injector::bypassVAC()
-{
-	g_menu->isPatchingVac = true;
-	this->closeProcesses({ vars::str_game_process_name.data(), vars::str_steam_process_name.data()});
-	
-	const auto& steamPath = utils::getSteamPath();
-	if (steamPath.empty())
-	{
-		g_menu->isPatchingVac = false;
-		return false;
-	}
-	std::wstring launchGame = string::format(L"-applaunch %d", vars::game_appid);
-	PROCESS_INFORMATION pi = {};
-#ifdef _DEBUG
-	bool result = false;
-	if(this->shouldAutoStart)
-		result = mem::openProcess(steamPath, { launchGame, L" -windowed -w 1280 -h 720" ,vars::str_game_launch_opts.data() }, pi);
-	else
-		result = mem::openProcess(steamPath, { }, pi);
-#else
-	bool result = false;
-	if (this->shouldAutoStart)
-		result = mem::openProcess(steamPath, { launchGame, vars::str_game_launch_opts.data() }, pi);
-	else
-		result = mem::openProcess(steamPath, { }, pi);
-#endif
-	if (!result)
-	{
-		g_menu->isPatchingVac = false;
-		return false;
-	}
-
-	CloseHandle(pi.hProcess);
-	CloseHandle(pi.hThread);
-	
-	std::vector<BYTE> vacBypassInstBuf(std::begin(vac3_data), std::end(vac3_data));
-
-	if (!this->map(vars::str_steam_process_name.data(), vars::str_steam_mod_name.data(), vacBypassInstBuf))
-	{
-		g_menu->isPatchingVac = false;
-		return false;
-	}
-
-	g_menu->isPatchingVac = false;
-	this->vacBypassed = true;
-	return true;
-
 }
 
 bool Injector::inject(std::string dllPath)
@@ -162,19 +112,3 @@ bool Injector::map(std::wstring_view procname, std::wstring_view modname, std::v
 	return true;
 }
 
-void Injector::closeProcesses(std::vector<std::wstring> processes)
-{
-	for (const auto& proc : processes)
-	{
-		DWORD pID = mem::getProcID(proc);
-		if (pID)
-		{
-			HANDLE hProc = OpenProcess(PROCESS_TERMINATE, false, pID);
-			if (hProc != nullptr)
-			{
-				TerminateProcess(hProc, 9);
-				CloseHandle(hProc);
-			}
-		}
-	}
-}
