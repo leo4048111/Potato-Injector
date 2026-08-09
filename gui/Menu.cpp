@@ -3,40 +3,23 @@
 
 #include <algorithm>
 #include <random>
-#include <sstream>
-#include <iomanip>
 
 namespace
 {
 	std::wstring makeRandomWindowTitle()
 	{
+		static constexpr wchar_t alphabet[] =
+			L"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 		static std::random_device randomDevice;
 		static std::mt19937 generator(randomDevice());
-		static std::uniform_int_distribution<unsigned int> distribution(0, 0xFFFFFF);
+		static std::uniform_int_distribution<std::size_t> distribution(0, std::size(alphabet) - 2);
 
-		std::wostringstream title;
-		title << L"Potato Injector ["
-			<< std::uppercase << std::hex << std::setw(6) << std::setfill(L'0')
-			<< distribution(generator) << L"]";
-		return title.str();
-	}
+		std::wstring title;
+		title.reserve(16);
+		for (std::size_t i = 0; i < 16; ++i)
+			title.push_back(alphabet[distribution(generator)]);
 
-	std::string toUtf8(const std::wstring& value)
-	{
-		if (value.empty())
-			return {};
-
-		const int utf8Length = WideCharToMultiByte(
-			CP_UTF8, 0, value.data(), static_cast<int>(value.size()),
-			nullptr, 0, nullptr, nullptr);
-		if (utf8Length <= 0)
-			return {};
-
-		std::string utf8(static_cast<std::size_t>(utf8Length), '\0');
-		WideCharToMultiByte(
-			CP_UTF8, 0, value.data(), static_cast<int>(value.size()),
-			utf8.data(), utf8Length, nullptr, nullptr);
-		return utf8;
+		return title;
 	}
 }
 
@@ -89,7 +72,6 @@ bool Menu::initialize()
 	WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, Menu::WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("WC"), NULL };
 	::RegisterClassEx(&wc);
 	const auto nativeWindowTitle = makeRandomWindowTitle();
-	this->windowTitle = toUtf8(nativeWindowTitle);
 	this->hwnd = ::CreateWindow(wc.lpszClassName, nativeWindowTitle.c_str(),
 		WS_POPUP,
 		100, 100, 500, 640, NULL, NULL, wc.hInstance, NULL);
@@ -170,9 +152,7 @@ void Menu::loop()
 			ImGuiWindowFlags_NoScrollbar);
 		ImGui::BeginChild("Hero", ImVec2(0, 86), true);
 		ImGui::BeginGroup();
-		ImGui::TextColored(
-			isDarkTheme ? ImVec4(0.42f, 0.80f, 1.00f, 1.00f) : ImVec4(0.08f, 0.40f, 0.78f, 1.00f),
-			"%s", this->windowTitle.c_str());
+		ImGui::TextColored(isDarkTheme ? ImVec4(0.42f, 0.80f, 1.00f, 1.00f) : ImVec4(0.08f, 0.40f, 0.78f, 1.00f), "POTATO INJECTOR");
 		ImGui::TextDisabled("A clean workspace for your selected module");
 		ImGui::EndGroup();
 		ImGui::SameLine(ImGui::GetWindowWidth() - 125.0f);

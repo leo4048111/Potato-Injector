@@ -40,7 +40,6 @@ private:
 	LPDIRECT3DDEVICE9        d3dDevice = NULL;
 	D3DPRESENT_PARAMETERS    d3dpp = {};
 	HWND					 hwnd{ NULL };
-	std::string              windowTitle;
 
 	std::atomic_bool isMenuOn{ false };
 	std::atomic_bool isInjecting{ false };
