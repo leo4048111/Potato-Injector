@@ -4,16 +4,15 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <random>
 #include <thread>
 #include <cwctype>
 
 #include <windows.h>
 
 #include <d3d9.h>
-#include <d3dx9.h>
 
 #pragma comment(lib, "d3d9.lib")
-#pragma comment(lib, "d3dx9.lib")
 
 #include "injector/injector.hpp"
 #include "memory/memory.hpp"

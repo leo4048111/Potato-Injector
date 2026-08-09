@@ -2,6 +2,25 @@
 #include "Menu.hpp"
 
 #include <algorithm>
+#include <random>
+#include <sstream>
+#include <iomanip>
+
+namespace
+{
+	std::wstring makeRandomWindowTitle()
+	{
+		static std::random_device randomDevice;
+		static std::mt19937 generator(randomDevice());
+		static std::uniform_int_distribution<unsigned int> distribution(0, 0xFFFFFF);
+
+		std::wostringstream title;
+		title << L"Potato Injector ["
+			<< std::uppercase << std::hex << std::setw(6) << std::setfill(L'0')
+			<< distribution(generator) << L"]";
+		return title.str();
+	}
+}
 
 #include "dependency/imgui/imgui.h"
 #include "dependency/imgui/imgui_internal.h"
@@ -17,7 +36,8 @@ bool Menu::initialize()
 	//ImGui_ImplWin32_EnableDpiAwareness();
 	WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, Menu::WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, _T("WC"), NULL };
 	::RegisterClassEx(&wc);
-	this->hwnd = ::CreateWindow(wc.lpszClassName, _T("Potato Injector"),
+	const auto windowTitle = makeRandomWindowTitle();
+	this->hwnd = ::CreateWindow(wc.lpszClassName, windowTitle.c_str(),
 		WS_POPUP | WS_THICKFRAME | WS_CAPTION | WS_SYSMENU | WS_MAXIMIZEBOX | WS_MINIMIZEBOX,
 		100, 100, 360, 430, NULL, NULL, wc.hInstance, NULL);
 	::SetWindowLong(hwnd, GWL_STYLE, GetWindowLong(hwnd, GWL_STYLE)
