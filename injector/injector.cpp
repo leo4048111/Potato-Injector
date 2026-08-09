@@ -6,12 +6,9 @@ namespace
 	constexpr auto kProcessWaitTimeout = 30s;
 	constexpr auto kModuleWaitTimeout = 20s;
 	constexpr auto kPollInterval = 250ms;
-	constexpr DWORD kMapProcessAccess =
-		PROCESS_QUERY_INFORMATION |
-		PROCESS_VM_READ |
-		PROCESS_VM_WRITE |
-		PROCESS_VM_OPERATION |
-		PROCESS_CREATE_THREAD;
+	// BlackBone's predefined mapping access set includes the rights required by
+	// its remote execution and handle-management paths without using ALL_ACCESS.
+	constexpr DWORD kMapProcessAccess = DEFAULT_ACCESS_P;
 
 	bool rangeWithin(std::size_t offset, std::size_t length, std::size_t total)
 	{
@@ -298,6 +295,7 @@ bool Injector::map(std::wstring_view procname, std::wstring_view modname, const 
 	const auto moduleDeadline = std::chrono::steady_clock::now() + kModuleWaitTimeout;
 	const auto normalizedModuleName = string::toLower(moduleName);
 	bool modReady = false;
+	logMapEvent(L"module-scan-start", pid, processName, moduleName, STATUS_SUCCESS, L"waiting for target module");
 	while (std::chrono::steady_clock::now() < moduleDeadline)
 	{
 		if (mappingFinished.load(std::memory_order_acquire))
@@ -309,6 +307,8 @@ bool Injector::map(std::wstring_view procname, std::wstring_view modname, const 
 		}
 
 		const auto& modules = proc.modules().GetAllModules();
+		logMapEvent(L"module-scan", pid, processName, moduleName, STATUS_SUCCESS,
+			modules.empty() ? L"module list is empty" : L"module list received");
 		for (const auto& mod : modules)
 		{
 			if (string::toLower(mod.first.first) == normalizedModuleName)
@@ -341,6 +341,7 @@ bool Injector::map(std::wstring_view procname, std::wstring_view modname, const 
 		return blackbone::LoadData(blackbone::MT_Default, blackbone::Ldr_Ignore);
 	};
 
+	logMapEvent(L"map-start", pid, processName, moduleName, STATUS_SUCCESS, L"calling MapImage");
 	const auto result = proc.mmap().MapImage(buffer.size(), const_cast<BYTE*>(buffer.data()), false, flags, modCallback);
 	const auto status = result.status;
 	if (!result.success())
